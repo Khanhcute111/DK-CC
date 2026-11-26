@@ -28,7 +28,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.media3.common.MediaItem
-import androidx.media3.common.Player
+import android.provider.OpenableColumns
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 import androidx.compose.ui.viewinterop.AndroidView
@@ -36,7 +36,6 @@ import com.dkcc.editor.model.EditorProject
 import com.dkcc.editor.model.MediaClip
 import com.dkcc.editor.storage.ProjectRepository
 
-private val Ink = Color(0xFF101814)
 private val Green = Color(0xFF047857)
 private val Canvas = Color(0xFF0D1110)
 private val Panel = Color(0xFF19221E)
@@ -61,7 +60,10 @@ private fun DKCCApp() {
             context.contentResolver.takePersistableUriPermission(uri, android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
         val current = activeProject ?: EditorProject(name = "Dự án mới")
-        val clip = MediaClip(uri = uri.toString(), displayName = uri.lastPathSegment?.substringAfterLast('/') ?: "Video")
+        val displayName = context.contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { cursor ->
+            if (cursor.moveToFirst()) cursor.getString(0) else null
+        } ?: "Video"
+        val clip = MediaClip(uri = uri.toString(), displayName = displayName)
         val updated = current.copy(clips = current.clips + clip, modifiedAt = System.currentTimeMillis())
         activeProject = updated
         runCatching { repository.save(updated) }
@@ -95,7 +97,7 @@ private fun DKCCApp() {
                         projects = repository.loadAll()
                         activeProject = null
                     },
-                    onImport = { picker.launch(arrayOf("video/*", "image/*", "audio/*")) },
+                    onImport = { picker.launch(arrayOf("video/*")) },
                     onProjectChange = { activeProject = it; runCatching { repository.save(it) }.onFailure { e -> message = e.localizedMessage } }
                 )
             }
