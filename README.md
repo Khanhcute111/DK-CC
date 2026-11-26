@@ -1,34 +1,45 @@
-# DK-CC — OpenReel Android
+# DK-CC — Android Video Editor
 
-Android adaptation of [OpenReel Video](https://github.com/Augani/openreel-video), maintained separately from the upstream project.
+DK-CC is a native Android adaptation inspired by [OpenReel Video](https://github.com/Augani/openreel-video), maintained in a separate repository.
 
-## Product goals
+## Current milestone: native app foundation
 
-- Android APK with a Vietnamese, touch-first interface.
-- Preserve real video-editing workflows; this is not an AI-only video generator.
-- Prefer on-device media processing and keep user media local.
-- Target mid-range Android devices first, including the Xiaomi Redmi Note 13 Pro 4G.
-- Never advertise an export format, frame rate, or editing tool as supported until it is implemented and tested on-device.
+The first Android foundation is now committed:
 
-## Important implementation status
+- Kotlin + Jetpack Compose application shell.
+- Vietnamese project library and editor screen.
+- Android document picker for importing video files without broad storage permissions.
+- Media3 ExoPlayer preview for the selected imported clip.
+- Local project metadata persistence using Android AtomicFile.
+- GitHub Actions workflow to run unit tests and assemble a debug APK.
 
-This repository was initially empty. The upstream repository currently contains a web editor and Android-port documentation, but the documented native Android implementation is not present in the upstream `main` source tree. Documentation is not a compilable Android application.
+## Build
 
-For that reason, this repository does not claim to contain a working APK yet. The Android app must be implemented and verified in stages rather than shipping a superficial WebView shell and calling it a full editor.
+Requirements: JDK 17, Android SDK Platform 35, Android Build Tools 35.0.0, Gradle 8.9.
 
-## Planned architecture
+```bash
+gradle testDebugUnitTest assembleDebug
+```
 
-1. Native Android shell and Vietnamese navigation (Jetpack Compose).
-2. Media import through Android Photo Picker / Storage Access Framework.
-3. Native playback and export pipeline (AndroidX Media3).
-4. Editing project model, timeline, undo/redo, autosave and recovery.
-5. Effects and color pipeline, then audio editing and captions.
-6. Device-level tests for import, preview, save/reopen, export, memory use and thermal stability.
+The debug APK is generated at `app/build/outputs/apk/debug/app-debug.apk`. GitHub Actions uploads it as the `dk-cc-debug-apk` artifact after a successful build.
+
+## Planned milestones
+
+1. **Foundation (current):** library, project persistence, video import and preview.
+2. **Timeline:** clip ordering, trim in/out, seek/playhead, undo/redo and recovery.
+3. **Editing:** multi-clip composition, transforms, crop, transitions and effects.
+4. **Audio and text:** audio tracks, volume/fades, titles and captions.
+5. **Export:** Media3 Transformer pipeline, progress/cancel, MP4 H.264 and supported device profiles.
+6. **Reliability:** automated tests, large-file handling, memory/thermal profiling and device tests.
+
+## Honest feature status
+
+This is an early native foundation, not yet a full-featured replacement for OpenReel. At this stage, imported videos can be previewed and project metadata can be saved locally. A multi-clip timeline, editing operations and final video export are not implemented yet. The app does not claim 4K/60 FPS support until that path is implemented and verified on real devices.
+
+## Device target
+
+Initial optimization target: Xiaomi Redmi Note 13 Pro 4G / mid-range Android devices. Runtime performance still needs physical-device testing.
 
 ## Upstream and license
 
-The upstream project is MIT-licensed. This adaptation must retain the upstream copyright and license notices for any upstream code that is copied or adapted. See [LICENSE](https://github.com/Augani/openreel-video/blob/main/LICENSE).
-
-## Build status
-
-No APK has been built or device-tested at this initial commit. Build instructions will be added with the first compilable Android milestone.
+The upstream OpenReel Video project is MIT-licensed. Any upstream source code copied or adapted must retain the original copyright and license notices. This initial Android scaffold is a clean native implementation and does not copy upstream application source files. See [upstream LICENSE](https://github.com/Augani/openreel-video/blob/main/LICENSE).
