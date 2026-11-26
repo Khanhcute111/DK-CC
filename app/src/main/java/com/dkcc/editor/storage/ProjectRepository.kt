@@ -1,6 +1,7 @@
 package com.dkcc.editor.storage
 
 import android.content.Context
+import android.util.AtomicFile
 import com.dkcc.editor.model.EditorProject
 import java.io.File
 
@@ -10,13 +11,14 @@ class ProjectRepository(context: Context) {
     fun save(project: EditorProject) {
         val safeId = project.id.replace(Regex("[^A-Za-z0-9_-]"), "")
         require(safeId.isNotBlank()) { "Mã dự án không hợp lệ" }
-        val target = File(folder, "$safeId.json")
-        val temp = File(folder, "$safeId.json.tmp")
-        temp.writeText(project.copy(modifiedAt = System.currentTimeMillis()).toJson())
-        if (target.exists() && !target.delete()) error("Không thể thay thế bản lưu cũ")
-        if (!temp.renameTo(target)) {
-            temp.copyTo(target, overwrite = true)
-            temp.delete()
+        val atomicFile = AtomicFile(File(folder, "$safeId.json"))
+        val stream = atomicFile.startWrite()
+        try {
+            stream.write(project.copy(modifiedAt = System.currentTimeMillis()).toJson().toByteArray(Charsets.UTF_8))
+            atomicFile.finishWrite(stream)
+        } catch (error: Throwable) {
+            atomicFile.failWrite(stream)
+            throw error
         }
     }
 
@@ -27,6 +29,6 @@ class ProjectRepository(context: Context) {
 
     fun delete(projectId: String) {
         val safeId = projectId.replace(Regex("[^A-Za-z0-9_-]"), "")
-        File(folder, "$safeId.json").delete()
+        if (safeId.isNotBlank()) AtomicFile(File(folder, "$safeId.json")).delete()
     }
 }
